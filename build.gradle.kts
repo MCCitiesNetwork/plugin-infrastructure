@@ -1,6 +1,7 @@
 plugins {
     id("java-library")
     alias(libs.plugins.run.paper)
+    alias(libs.plugins.shadow)
 }
 
 repositories {
@@ -10,6 +11,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.paper.api)
+    implementation(libs.configurate.yaml)
 }
 
 java {
@@ -27,5 +29,14 @@ tasks {
         filesMatching("paper-plugin.yml") {
             expand(props)
         }
+    }
+
+    shadowJar {
+        val relocateBase = "${project.group}.${project.name.replace("-", "")}.libs"
+        relocate("org.spongepowered.configurate", "$relocateBase.configurate")
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 }

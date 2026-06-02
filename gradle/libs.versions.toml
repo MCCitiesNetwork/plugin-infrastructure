@@ -3,9 +3,13 @@ paper-api = "1.21.8-R0.1-SNAPSHOT"
 minecraft = "1.21.8"
 
 run-task = "3.0.2"
+shadow = "9.4.1"
+configurate = "4.2.0"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
+configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
 
 [plugins]
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-task" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
