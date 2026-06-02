@@ -1,0 +1,8 @@
+name: plugin-infrastructure
+version: '${version}'
+
+main: net.democracrycraft.pluginInfrastructure.PluginInfrastructure
+api-version: '1.21.8'
+load: STARTUP
+
+authors: [ md5sha256 ]
