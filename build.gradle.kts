@@ -11,11 +11,24 @@ repositories {
 dependencies {
     compileOnly(libs.paper.api)
     compileOnlyApi(libs.configurate.yaml)
+
+    // Tests need Paper on the classpath too (it is only compileOnly for main), plus an in-memory
+    // JDBC database for the schema-migrator tests and Mockito for the module-lifecycle tests.
+    testImplementation(libs.paper.api)
+    testImplementation(libs.configurate.yaml)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.h2)
 }
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(21)
     withSourcesJar()
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 publishing {

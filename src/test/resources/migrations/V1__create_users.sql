@@ -1,0 +1,1 @@
+CREATE TABLE app_users (id INT PRIMARY KEY, name VARCHAR(64))

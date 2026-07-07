@@ -6,9 +6,18 @@ run-task = "3.0.2"
 shadow = "9.4.1"
 configurate = "4.2.0"
 
+junit = "5.11.4"
+mockito = "5.14.2"
+h2 = "2.3.232"
+
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
 configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
+
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
 
 [plugins]
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-task" }
