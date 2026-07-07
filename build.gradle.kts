@@ -22,7 +22,10 @@ publishing {
     repositories {
         maven {
             name = "deploy"
-            url = uri(providers.gradleProperty("deployUrl").getOrElse("https://example.com"))
+            // Route by version: snapshots and releases live under sibling paths on the same host.
+            val snapshot = version.toString().endsWith("-SNAPSHOT")
+            val defaultUrl = "https://maven.democracycraft.net/" + if (snapshot) "snapshots" else "releases"
+            url = uri(providers.gradleProperty("deployUrl").getOrElse(defaultUrl))
             credentials {
                 username = providers.gradleProperty("deployUsername").orNull
                 password = providers.gradleProperty("deployPassword").orNull
@@ -35,6 +38,19 @@ publishing {
             pom {
                 name.set("Plugin Infrastructure")
                 description.set("Shared infrastructure and utilities for Paper plugins")
+                url.set("https://github.com/MCCitiesNetwork/plugin-infrastructure")
+                developers {
+                    developer {
+                        id.set("md5sha256")
+                        name.set("Andrew Wong")
+                        email.set("42793301+md5sha256@users.noreply.github.com")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/MCCitiesNetwork/plugin-infrastructure.git")
+                    developerConnection.set("scm:git:ssh://github.com/MCCitiesNetwork/plugin-infrastructure.git")
+                    url.set("https://github.com/MCCitiesNetwork/plugin-infrastructure")
+                }
             }
         }
     }
