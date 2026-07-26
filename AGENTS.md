@@ -9,22 +9,31 @@ verified.
 - Single-module Gradle build (Kotlin DSL). Root: `build.gradle.kts`, `settings.gradle.kts`.
 - Java **21** (`java` toolchain). Plugins: `java-library`, `maven-publish`.
 - Version catalog: `gradle/libs.versions.toml`. `group`/`version` live in `gradle.properties`.
-- Source root: `src/main/java/net/democracrycraft/pluginInfrastructure/`
+- Source root: `src/main/java/com/minecraftcitiesnetwork/pluginInfrastructure/`
   - `modules/` — runtime module system (load/init/reload/shutdown feature jars).
   - `sql/` — `SchemaMigrator` (abstract) + `MigrationStep` for versioned schema migrations.
+  - `configurate/` — `MessageContainer` plus `TypeSerializer`s for `Component` / `SimpleDateFormat`.
   - `util/` — stateless helpers (`DurationParserUtil`, `CurrencyFormatter`, `DateFormatter`).
-- No tests yet. There is no `src/test` source set configured.
+- Tests live in `src/test/java`, JUnit 5 with Mockito (module lifecycle) and H2 (schema migrator).
+  Migration fixtures are classpath resources under `src/test/resources/migrations/`.
 
 ## Build & verify
 
 ```bash
-./gradlew build              # compile + assemble; the primary check
+./gradlew build              # compile + assemble + test; the primary check
+./gradlew test               # tests only
 ./gradlew compileJava        # faster compile-only loop while iterating
 ./gradlew publishToMavenLocal # sanity-check the published artifact shape
 ```
 
 On Windows the shell is PowerShell; invoke `./gradlew` (the wrapper works from Git Bash too). Always
-compile after a change — this is a library, so a clean `build` is the bar.
+run `build` after a change — this is a library, so a clean `build`, tests included, is the bar.
+
+Add tests with the change, not after it. Prefer a test that would have caught the specific bug over
+one that restates the happy path, and assert what the code actually does — if a dependency turns out
+to behave differently than expected (MiniMessage's default instance is lenient and does not throw on
+a malformed tag, for one), pin the real behaviour and say so in the test, rather than asserting an
+outcome that cannot occur.
 
 ## Conventions
 
@@ -51,12 +60,31 @@ compile after a change — this is a library, so a clean `build` is the bar.
 - **`SchemaMigrator` is abstract and dialect-agnostic.** It provides no SQL of its own — subclasses
   implement `bootstrapDdl()`, `selectVersion()`, `insertVersion()`. Migration resources load from a
   caller-supplied `ClassLoader` (the consuming plugin's), not this library's.
+- **Version tables are namespaced per plugin.** Subclasses must not use a bare `schema_version`:
+  two plugins sharing a database would read each other's version, and one of them would refuse to
+  start while the other re-applied migrations that were never its own.
+- **Migration files are split client-side.** `splitStatements` is quote- and comment-aware so a `;`
+  inside a string literal is not a delimiter; statements are executed one at a time so failures are
+  attributed correctly and no `allowMultiQueries=true` is required. Don't reintroduce whole-file
+  execution as the default. Note the default splitter lexes **MySQL/MariaDB**, not standard SQL
+  (`#` comments, backtick identifiers, backslash escapes) — it is `protected` so another dialect can
+  replace it, and that is the one dialect concern the compiler won't prompt for.
+- **Runtime values are never parsed as MiniMessage.** `MessageContainer.value(...)` wraps
+  `Placeholder.unparsed`; `Placeholder.parsed` would let a stored, player-authored string carry
+  `<click:run_command:…>` that runs as whoever clicks it. Do not add a helper that deserializes an
+  arbitrary runtime string, and do not build templates by concatenating values into
+  `miniMessageFormattedFor`. `markup(...)` with a pre-built `Component` is the way to get formatting
+  into a slot.
+- **User-facing parsers treat their input as hostile.** `DurationParserUtil` is fed straight from
+  commands: every rejection path is an `IllegalArgumentException`, arithmetic is `Math.*Exact`, and
+  case folding is `Locale.ROOT` (a Turkish default locale otherwise breaks the `min` unit). Keep
+  that shape for anything else that parses player input.
 
 ## Porting code from sibling projects
 
 Sibling plugins in the workspace are the source of much of this code. When lifting something in:
 
-1. Repackage under `net.democracrycraft.pluginInfrastructure.*`.
+1. Repackage under `com.minecraftcitiesnetwork.pluginInfrastructure.*`.
 2. Remove app-specific coupling (domain types, framework data sources) — generalize to JDK or
    Paper types so the result is a genuine reusable utility.
 3. Leave behind app-specific data (e.g. a concrete migration list or schema SQL); this library

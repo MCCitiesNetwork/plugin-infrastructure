@@ -1,0 +1,2 @@
+CREATE TABLE app_dupe (id INT PRIMARY KEY);
+CREATE TABLE app_dupe (id INT PRIMARY KEY);
