@@ -5,6 +5,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -12,6 +13,7 @@ public abstract class SimplePluginModule<T extends Plugin> implements PluginModu
 
     private final Collection<Listener> listeners = new ArrayList<>();
     private T plugin;
+    private Path dataFolder;
 
     protected T plugin() {
         if (this.plugin == null) {
@@ -21,13 +23,23 @@ public abstract class SimplePluginModule<T extends Plugin> implements PluginModu
     }
 
     @Override
-    public void initialize(@NotNull T plugin) {
+    public void initialize(@NotNull T plugin, @NotNull Path dataFolder) {
         this.plugin = plugin;
+        this.dataFolder = dataFolder;
     }
 
     @Override
     public void shutdown(@NotNull T plugin) {
         this.plugin = null;
+        this.dataFolder = null;
+    }
+
+    @NotNull
+    protected Path dataFolder() {
+        if (this.dataFolder == null) {
+            throw new IllegalStateException("Module not initialized!");
+        }
+        return this.dataFolder;
     }
 
     protected void registerListener(@NotNull Listener listener) {
