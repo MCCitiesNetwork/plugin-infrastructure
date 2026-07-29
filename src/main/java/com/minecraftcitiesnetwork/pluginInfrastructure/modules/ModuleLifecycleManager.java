@@ -4,6 +4,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -129,7 +130,7 @@ public class ModuleLifecycleManager<T extends Plugin> {
             return;
         }
         try {
-            loaded.module().initialize(this.plugin);
+            loaded.module().initialize(this.plugin, loaded.dataFolder());
             this.activeModules.put(name, loaded);
             this.logger.info("Initialized module " + name);
         } catch (ModuleInitializationException | RuntimeException e) {

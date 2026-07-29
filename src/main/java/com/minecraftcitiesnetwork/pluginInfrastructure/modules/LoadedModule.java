@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 
 /**
  * A module that has been loaded from disk, paired with the {@link URLClassLoader} that owns its
@@ -14,11 +15,13 @@ import java.net.URLClassLoader;
  *
  * @param manifest    the module's parsed manifest
  * @param module      the instantiated module
+ * @param dataFolder  the module's data folder
  * @param classLoader the class loader that owns the module's classes
  */
 public record LoadedModule<T extends Plugin>(
         @NotNull ModuleManifest manifest,
         @NotNull PluginModule<T> module,
+        @NotNull Path dataFolder,
         @NotNull URLClassLoader classLoader
 ) implements Closeable {
 

@@ -3,11 +3,12 @@ package com.minecraftcitiesnetwork.pluginInfrastructure.modules;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 public interface PluginModule<T extends Plugin> {
 
-    void initialize(@NotNull T plugin) throws ModuleInitializationException;
+    void initialize(@NotNull T plugin, @NotNull Path dataFolder) throws ModuleInitializationException;
 
     void shutdown(@NotNull T plugin) throws ModuleShutdownException;
 

@@ -94,7 +94,7 @@ public class ModuleLoader {
             @SuppressWarnings("unchecked")
             PluginModule<T> module = (PluginModule<T>) instance;
             loaded = true;
-            return new LoadedModule<>(manifest, module, classLoader);
+            return new LoadedModule<>(manifest, module, this.moduleDir.resolve(manifest.moduleName()), classLoader);
         } catch (ClassNotFoundException e) {
             throw new ModuleLoadException("Could not find entry class " + manifest.entryClass()
                     + " in module " + manifest.moduleName(), e);
