@@ -10,13 +10,13 @@ migration** and **formatting/parsing** helpers.
 
 ## Installation
 
-Artifacts are published to `https://maven.democracycraft.net` — `/snapshots` for `-SNAPSHOT`
+Artifacts are published to `https://maven.minecraftcitiesnetwork.com` — `/snapshots` for `-SNAPSHOT`
 versions and `/releases` for stable ones.
 
 ```kotlin
 // build.gradle.kts
 repositories {
-    maven("https://maven.democracycraft.net/snapshots") // use /releases for release versions
+    maven("https://maven.minecraftcitiesnetwork.com/snapshots") // use /releases for release versions
 }
 
 dependencies {
@@ -184,7 +184,7 @@ Requires a JDK 21 toolchain (Gradle will provision one if configured).
 ## Publishing
 
 Publishing is configured via the `maven-publish` plugin. The deploy URL defaults to
-`https://maven.democracycraft.net/{snapshots,releases}` based on the project version; only
+`https://maven.minecraftcitiesnetwork.com/{snapshots,releases}` based on the project version; only
 credentials need to be supplied (a `deployUrl` Gradle property can override the URL if needed):
 
 ```bash
@@ -198,6 +198,7 @@ Two GitHub Actions workflows live in `.github/workflows/`:
 - **`build.yml`** — on push to `main`/`master`/`develop`, on PRs, and manual dispatch: runs
   `./gradlew build` and uploads the resulting jar as an artifact.
 - **`deploy.yml`** — on a published release or manual dispatch: publishes to the Maven repository.
-  The base URL comes from the repository **variable** `MAVEN_REPOSITORY_URL`, and the workflow
-  appends `/snapshots` or `/releases` based on the version. Credentials come from the **secrets**
-  `MAVEN_REPOSITORY_USERNAME` and `MAVEN_REPOSITORY_PASSWORD`.
+  It publishes to `https://maven.minecraftcitiesnetwork.com`, appending `/snapshots` or `/releases`
+  based on the version. Credentials come from the **secrets** `MAVEN_USERNAME` and `MAVEN_PASSWORD`
+  (organization secrets reach this repository only if it is public on the GitHub Free plan;
+  otherwise set them on the repository).

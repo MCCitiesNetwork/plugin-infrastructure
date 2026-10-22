@@ -37,7 +37,7 @@ publishing {
             name = "deploy"
             // Route by version: snapshots and releases live under sibling paths on the same host.
             val snapshot = version.toString().endsWith("-SNAPSHOT")
-            val defaultUrl = "https://maven.democracycraft.net/" + if (snapshot) "snapshots" else "releases"
+            val defaultUrl = "https://maven.minecraftcitiesnetwork.com/" + if (snapshot) "snapshots" else "releases"
             url = uri(providers.gradleProperty("deployUrl").getOrElse(defaultUrl))
             credentials {
                 username = providers.gradleProperty("deployUsername").orNull

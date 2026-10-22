@@ -43,6 +43,6 @@ jobs:
           chmod +x ./gradlew
           ./gradlew publishMavenPublicationToDeployRepository
         env:
-          ORG_GRADLE_PROJECT_deployUrl: ${{ secrets.MAVEN_REPOSITORY_URL }}${{ steps.repo-path.outputs.suffix }}
-          ORG_GRADLE_PROJECT_deployUsername: ${{ secrets.MAVEN_REPOSITORY_USERNAME }}
-          ORG_GRADLE_PROJECT_deployPassword: ${{ secrets.MAVEN_REPOSITORY_PASSWORD }}
+          ORG_GRADLE_PROJECT_deployUrl: https://maven.minecraftcitiesnetwork.com${{ steps.repo-path.outputs.suffix }}
+          ORG_GRADLE_PROJECT_deployUsername: ${{ secrets.MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_deployPassword: ${{ secrets.MAVEN_PASSWORD }}

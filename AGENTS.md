@@ -95,9 +95,9 @@ Sibling plugins in the workspace are the source of much of this code. When lifti
 
 - `.github/workflows/build.yml` — build + upload jar on push/PR/dispatch.
 - `.github/workflows/deploy.yml` — publish on release/dispatch; `-SNAPSHOT` → `/snapshots`, else
-  `/releases`. Base URL comes from the repository **variable** `MAVEN_REPOSITORY_URL`; credentials
-  from **secrets** `MAVEN_REPOSITORY_USERNAME` / `MAVEN_REPOSITORY_PASSWORD`. These map to the
+  `/releases` on `https://maven.minecraftcitiesnetwork.com`; credentials from the **secrets**
+  `MAVEN_USERNAME` / `MAVEN_PASSWORD`. These map to the
   `deployUrl`/`deployUsername`/`deployPassword` Gradle properties via `ORG_GRADLE_PROJECT_*` env.
-- `build.gradle.kts` also defaults `deployUrl` to `https://maven.democracycraft.net/{snapshots,releases}`
+- `build.gradle.kts` also defaults `deployUrl` to `https://maven.minecraftcitiesnetwork.com/{snapshots,releases}`
   by version, so local `./gradlew publish -PdeployUsername=… -PdeployPassword=…` works without the URL.
 - Publishing coordinates come from `gradle.properties`; bump `version` there.
