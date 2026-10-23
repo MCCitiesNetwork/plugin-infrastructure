@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ class ModuleLifecycleManagerTest {
         }
 
         @Override
-        public void initialize(@NotNull Plugin plugin) throws ModuleInitializationException {
+        public void initialize(@NotNull Plugin plugin, @NotNull Path dataFolder) throws ModuleInitializationException {
             if (this.initFailure != null) {
                 throw this.initFailure;
             }
@@ -108,7 +109,7 @@ class ModuleLifecycleManagerTest {
 
     private LoadedModule<Plugin> loaded(String moduleName, boolean reloadable, FakeModule module) {
         ModuleManifest manifest = new ModuleManifest(moduleName, "Entry", "author", HOST, reloadable);
-        return new LoadedModule<>(manifest, module, new URLClassLoader(new URL[0]));
+        return new LoadedModule<>(manifest, module, Path.of(moduleName), new URLClassLoader(new URL[0]));
     }
 
     private void stubLoader(List<LoadedModule<Plugin>> modules) throws IOException {
