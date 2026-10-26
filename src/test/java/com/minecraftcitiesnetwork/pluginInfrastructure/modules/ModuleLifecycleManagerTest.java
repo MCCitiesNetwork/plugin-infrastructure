@@ -176,6 +176,22 @@ class ModuleLifecycleManagerTest {
     }
 
     @Test
+    @DisplayName("a failed initialize is not followed by shutdown, neither at once nor on stop()")
+    void failedInitializeIsNeverShutDown() throws Exception {
+        // Pins the PluginModule contract: cleaning up after a failed initialize is the module's job.
+        List<String> shutdowns = new ArrayList<>();
+        FakeModule bad = new FakeModule("bad", shutdowns);
+        bad.initFailure = new RuntimeException("boom");
+        stubLoader(List.of(loaded("bad", false, bad)));
+
+        ModuleLifecycleManager<Plugin> manager = manager();
+        manager.start();
+        manager.stop();
+
+        assertTrue(shutdowns.isEmpty());
+    }
+
+    @Test
     @DisplayName("stop() shuts modules down in reverse initialization order and clears state")
     void stopShutsDownInReverseOrder() throws Exception {
         List<String> order = new ArrayList<>();

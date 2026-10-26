@@ -8,8 +8,34 @@ import java.util.concurrent.CompletableFuture;
 
 public interface PluginModule<T extends Plugin> {
 
+    /**
+     * Starts this module: reads its configuration and registers its listeners, tasks and commands
+     * with the host.
+     *
+     * <p><strong>Failure is the module's to clean up.</strong> If this method throws, the
+     * {@link ModuleLifecycleManager} logs the failure and closes the module's class loader, but it
+     * does <em>not</em> call {@link #shutdown}. Anything registered before the failure stays live:
+     * a listener keeps firing with classes from a closed class loader, a task keeps running. An
+     * implementation must therefore either do all fallible work (reading config, resolving
+     * services) before registering anything, or undo what it registered before rethrowing.
+     *
+     * @param plugin     the host plugin
+     * @param dataFolder this module's own data folder
+     * @throws ModuleInitializationException if the module cannot start; it must have released
+     *                                       everything it registered before throwing
+     */
     void initialize(@NotNull T plugin, @NotNull Path dataFolder) throws ModuleInitializationException;
 
+    /**
+     * Stops this module and releases everything {@link #initialize} registered.
+     *
+     * <p>Called once, by {@link ModuleLifecycleManager#stop()}, and only for a module whose
+     * {@code initialize} returned normally. It is never called after a failed {@code initialize},
+     * so it may assume a fully started module.
+     *
+     * @param plugin the host plugin
+     * @throws ModuleShutdownException if releasing fails; the class loader is closed regardless
+     */
     void shutdown(@NotNull T plugin) throws ModuleShutdownException;
 
     /**

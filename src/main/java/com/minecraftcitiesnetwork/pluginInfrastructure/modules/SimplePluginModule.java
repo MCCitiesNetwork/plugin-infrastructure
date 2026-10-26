@@ -9,6 +9,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * A {@link PluginModule} base that keeps the host plugin and data folder, and tracks listeners
+ * registered through {@link #registerListener}.
+ *
+ * <p>Tracking is not cleanup: neither this class's {@link #initialize} nor its {@link #shutdown}
+ * unregisters anything. Following {@link PluginModule#initialize}'s contract, a subclass whose
+ * {@code initialize} fails after {@code registerListener} must call {@link #unregisterListeners()}
+ * before rethrowing, and its {@code shutdown} must call {@code unregisterListeners()} before
+ * {@code super.shutdown(plugin)}.
+ *
+ * @param <T> the host plugin type
+ */
 public abstract class SimplePluginModule<T extends Plugin> implements PluginModule<T> {
 
     private final Collection<Listener> listeners = new ArrayList<>();
