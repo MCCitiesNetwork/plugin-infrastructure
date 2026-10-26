@@ -51,6 +51,11 @@ by a `ModuleManifest` and loaded at runtime by its own `URLClassLoader`.
 - `ModuleLifecycleManager<T>` — owns the runtime lifecycle: `start()`, `stop()`,
   `reloadAsync(moduleName)`, `getActiveModules()`.
 
+> **Failed start:** if `initialize` throws, the manager closes the module's class loader but does
+> **not** call `shutdown`. A module must do its fallible work before registering anything, or undo
+> its registrations before rethrowing; otherwise its listeners and tasks stay live. `shutdown` is only
+> called for modules that started.
+
 > **Reload semantics:** a module reload is a **config refresh** (`PluginModule#reload`), not a jar
 > unload/reswap. Changed module code is only picked up by restarting the host plugin. Only modules
 > whose manifest sets `reloadable = true` are refreshed.

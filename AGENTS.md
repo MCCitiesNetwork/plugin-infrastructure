@@ -55,6 +55,10 @@ outcome that cannot occur.
 - **Module reload = config refresh, not a jar swap.** `ModuleLifecycleManager.reloadAsync` calls the
   module's `PluginModule#reload`; it does **not** unload or replace the jar. Changed module code is
   only picked up by restarting the host plugin, and only manifests with `reloadable = true` refresh.
+- **A failed `initialize` is never followed by `shutdown`.** The manager only logs and closes the
+  class loader, so a module must clean up its own partial registrations before throwing (documented
+  on `PluginModule#initialize`). `SimplePluginModule` tracks listeners but unregisters nothing by
+  itself. Changing this is a contract change for every module, not a bug fix.
 - **`ModuleLifecycleManager` is not thread-safe.** Its state must be touched from one thread (the
   server main thread on Paper).
 - **`SchemaMigrator` is abstract and dialect-agnostic.** It provides no SQL of its own — subclasses
