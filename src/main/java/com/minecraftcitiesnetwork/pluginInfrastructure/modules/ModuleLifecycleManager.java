@@ -148,7 +148,7 @@ public class ModuleLifecycleManager<T extends Plugin> {
      * Registers module commands. Call it from Paper's {@code LifecycleEvents.COMMANDS} handler,
      * after {@link #load()} and before {@link #initializeLoaded()}, every time the event fires.
      *
-     * <p>Each loaded {@link CommandDeclaringModule} that has not declared yet is asked to declare.
+     * <p>Each loaded module that has not declared yet is asked to, via {@link PluginModule#declareCommands}.
      * A module whose {@code declareCommands} throws is logged, unloaded and not initialized; nothing
      * it declared is registered. Then every module's guarded commands are added: subcommands to
      * {@code root}, top-level commands to {@code commands}. A guarded command runs the module's code
@@ -170,13 +170,13 @@ public class ModuleLifecycleManager<T extends Plugin> {
                 LoadedModule<T> loaded = modules.next();
                 String name = loaded.manifest().moduleName();
                 // A second copy with the same name is dropped by initializeLoaded and declares nothing.
-                if (!(loaded.module() instanceof CommandDeclaringModule declaring) || !this.declaredThisLoad.add(name)) {
+                if (!this.declaredThisLoad.add(name)) {
                     continue;
                 }
                 BooleanSupplier active = () -> this.activeNames.contains(name);
                 DeclaredCommands declared = new DeclaredCommands(new ArrayList<>(), new ArrayList<>());
                 try {
-                    declaring.declareCommands(
+                    loaded.module().declareCommands(
                             sub -> declared.subcommands().add(CommandGuard.guard(sub, name, active, unavailable)),
                             (command, description, aliases) -> declared.topLevel().add(new TopLevelCommand(
                                     CommandGuard.guard(command, name, active, unavailable), description,

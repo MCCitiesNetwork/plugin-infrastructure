@@ -52,9 +52,9 @@ by a `ModuleManifest` and loaded at runtime by its own `URLClassLoader`.
   `reloadAsync(moduleName)`, `getActiveModules()`. `start()` is `load()` then `initializeLoaded()`;
   call the two separately when the host must do something with the loaded modules first, such as
   letting them declare commands while the server still accepts registrations.
-- `CommandDeclaringModule` — implemented by a module that adds Brigadier commands. It declares them
-  through a `ModuleCommandRoot` (subcommands under the host's root) and a `ModuleCommandRegistrar`
-  (top-level commands), both of which guard every tree.
+- `PluginModule#declareCommands(ModuleCommandRoot, ModuleCommandRegistrar)` — a default no-op that a
+  module overrides to add Brigadier commands: subcommands under the host's root, or top-level
+  commands. Both parameters guard every tree.
 
 > **Commands:** Paper only accepts commands during `LifecycleEvents.COMMANDS`, before modules
 > initialize, and cannot unregister them. Call `declareCommands(commands, root, unavailable)` from that

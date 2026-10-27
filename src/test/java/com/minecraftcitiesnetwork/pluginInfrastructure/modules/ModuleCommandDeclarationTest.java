@@ -47,7 +47,7 @@ class ModuleCommandDeclarationTest {
     private final ModuleUnavailableHandler unavailable = (src, name) -> this.unavailableFor.add(name);
 
     /** A module that declares commands through a callback and can fail to initialize. */
-    private static final class CommandModule implements PluginModule<Plugin>, CommandDeclaringModule {
+    private static final class CommandModule implements PluginModule<Plugin> {
         private final BiConsumer<ModuleCommandRoot, ModuleCommandRegistrar> declare;
         private RuntimeException initFailure;
         int declareCalls;

@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Registers top-level commands for a {@link CommandDeclaringModule}. Each tree is guarded by the
+ * Registers top-level commands for {@link PluginModule#declareCommands}. Each tree is guarded by the
  * module's availability before it reaches Paper's registrar, so a module cannot register an
  * unguarded command.
  */

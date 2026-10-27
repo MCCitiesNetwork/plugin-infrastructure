@@ -4,7 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.jetbrains.annotations.NotNull;
 
-/** The host's root command, as offered to a {@link CommandDeclaringModule}. */
+/** The host's root command, as offered to {@link PluginModule#declareCommands}. */
 public interface ModuleCommandRoot {
 
     /**
