@@ -49,7 +49,9 @@ by a `ModuleManifest` and loaded at runtime by its own `URLClassLoader`.
   (configurate-serializable).
 - `ModuleLoader` — reads module jars from a directory and instantiates their entry classes.
 - `ModuleLifecycleManager<T>` — owns the runtime lifecycle: `start()`, `stop()`,
-  `reloadAsync(moduleName)`, `getActiveModules()`.
+  `reloadAsync(moduleName)`, `getActiveModules()`. `start()` is `load()` then `initializeLoaded()`;
+  call the two separately when the host must do something with the loaded modules first, such as
+  letting them declare commands while the server still accepts registrations.
 
 > **Failed start:** if `initialize` throws, the manager closes the module's class loader but does
 > **not** call `shutdown`. A module must do its fallible work before registering anything, or undo

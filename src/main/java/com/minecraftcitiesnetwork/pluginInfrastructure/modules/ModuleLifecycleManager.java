@@ -39,6 +39,12 @@ public class ModuleLifecycleManager<T extends Plugin> {
     private final Map<String, LoadedModule<T>> activeModules = new LinkedHashMap<>();
 
     /**
+     * Modules returned by {@link #load()} and not yet passed to {@link #initializeLoaded()}, or
+     * {@code null} when nothing is waiting.
+     */
+    private List<LoadedModule<T>> loadedModules;
+
+    /**
      * Creates a manager that expects modules targeting the host plugin's own class name and logs
      * through the plugin's logger.
      */
@@ -59,17 +65,52 @@ public class ModuleLifecycleManager<T extends Plugin> {
     }
 
     /**
-     * Loads every module from disk and initializes it against the host plugin.
+     * Loads every module from disk and initializes it against the host plugin. Equivalent to
+     * {@link #load()} followed by {@link #initializeLoaded()}.
      *
-     * @throws IllegalStateException if modules are already active; call {@link #stop()} first
+     * @throws IllegalStateException if modules are already loaded or active; call {@link #stop()} first
      * @throws IOException           if the module directory cannot be scanned
      */
     public void start() throws IOException {
-        if (!this.activeModules.isEmpty()) {
-            throw new IllegalStateException("Modules already started; call stop() or reload() first");
+        load();
+        initializeLoaded();
+    }
+
+    /**
+     * Loads every module from disk without initializing any of them. The host can then inspect the
+     * returned modules, for example to let them declare commands while the server still accepts
+     * registrations, before calling {@link #initializeLoaded()}.
+     *
+     * <p>A loaded module's classes are live but {@link PluginModule#initialize} has not run, so the
+     * host must not expect any module state yet.
+     *
+     * @return the loaded modules, in load order
+     * @throws IllegalStateException if modules are already loaded or active; call {@link #stop()} first
+     * @throws IOException           if the module directory cannot be scanned
+     */
+    public @NotNull List<LoadedModule<T>> load() throws IOException {
+        if (this.loadedModules != null || !this.activeModules.isEmpty()) {
+            throw new IllegalStateException("Modules already loaded; call stop() first");
         }
-        List<LoadedModule<T>> loaded = this.moduleLoader.loadModulesFromDisk(this.expectedPluginClass,
-                this.logger);
+        List<LoadedModule<T>> loaded = List.copyOf(
+                this.moduleLoader.loadModulesFromDisk(this.expectedPluginClass, this.logger));
+        this.loadedModules = loaded;
+        return loaded;
+    }
+
+    /**
+     * Initializes the modules returned by the last {@link #load()}. A module whose
+     * {@code initialize} throws is unloaded and is not active afterwards; see
+     * {@link PluginModule#initialize} for its cleanup contract.
+     *
+     * @throws IllegalStateException if nothing is loaded
+     */
+    public void initializeLoaded() {
+        List<LoadedModule<T>> loaded = this.loadedModules;
+        if (loaded == null) {
+            throw new IllegalStateException("No modules loaded; call load() first");
+        }
+        this.loadedModules = null;
         for (LoadedModule<T> module : loaded) {
             initialize(module);
         }
@@ -77,9 +118,15 @@ public class ModuleLifecycleManager<T extends Plugin> {
 
     /**
      * Shuts down every active module in reverse initialization order and releases their class
-     * loaders. Safe to call when nothing is active.
+     * loaders. Modules that were loaded but never initialized are closed without
+     * {@link PluginModule#shutdown}. Safe to call when nothing is loaded or active.
      */
     public void stop() {
+        List<LoadedModule<T>> pending = this.loadedModules;
+        if (pending != null) {
+            this.loadedModules = null;
+            pending.forEach(this::closeQuietly);
+        }
         List<LoadedModule<T>> ordered = new ArrayList<>(this.activeModules.values());
         for (int i = ordered.size() - 1; i >= 0; i--) {
             shutdown(ordered.get(i));
