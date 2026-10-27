@@ -268,6 +268,75 @@ class ModuleLifecycleManagerTest {
     }
 
     @Test
+    @DisplayName("load() loads modules without initializing them")
+    void loadDoesNotInitialize() throws Exception {
+        FakeModule a = new FakeModule("a", new ArrayList<>());
+        stubLoader(List.of(loaded("a", false, a)));
+
+        ModuleLifecycleManager<Plugin> manager = manager();
+        List<LoadedModule<Plugin>> loaded = manager.load();
+
+        assertFalse(a.initialized);
+        assertEquals(1, loaded.size());
+        assertTrue(manager.getActiveModules().isEmpty());
+    }
+
+    @Test
+    @DisplayName("initializeLoaded() initializes what load() loaded and activates it")
+    void initializeLoadedActivates() throws Exception {
+        FakeModule a = new FakeModule("a", new ArrayList<>());
+        stubLoader(List.of(loaded("a", false, a)));
+
+        ModuleLifecycleManager<Plugin> manager = manager();
+        manager.load();
+        manager.initializeLoaded();
+
+        assertTrue(a.initialized);
+        assertEquals(java.util.Set.of("a"), manager.getActiveModules().keySet());
+    }
+
+    @Test
+    @DisplayName("initializeLoaded() without load() is rejected")
+    void initializeLoadedWithoutLoadThrows() {
+        assertThrows(IllegalStateException.class, manager()::initializeLoaded);
+    }
+
+    @Test
+    @DisplayName("load() twice without stop() is rejected")
+    void loadTwiceThrows() throws Exception {
+        stubLoader(List.of(loaded("a", false, new FakeModule("a", new ArrayList<>()))));
+        ModuleLifecycleManager<Plugin> manager = manager();
+        manager.load();
+
+        assertThrows(IllegalStateException.class, manager::load);
+    }
+
+    @Test
+    @DisplayName("stop() after load() closes loaded modules without shutting them down")
+    void stopAfterLoadClosesWithoutShutdown() throws Exception {
+        List<String> shutdowns = new ArrayList<>();
+        boolean[] closed = new boolean[1];
+        ModuleManifest manifest = new ModuleManifest("a", "Entry", "author", HOST, false);
+        URLClassLoader classLoader = new URLClassLoader(new URL[0]) {
+            @Override
+            public void close() throws IOException {
+                closed[0] = true;
+                super.close();
+            }
+        };
+        stubLoader(List.of(new LoadedModule<>(manifest, new FakeModule("a", shutdowns), Path.of("a"), classLoader)));
+
+        ModuleLifecycleManager<Plugin> manager = manager();
+        manager.load();
+        manager.stop();
+
+        assertTrue(closed[0]);
+        assertTrue(shutdowns.isEmpty());
+        // Releasing the loaded modules allows a fresh load.
+        manager.load();
+    }
+
+    @Test
     @DisplayName("getActiveModules() returns an immutable snapshot")
     void activeModulesIsImmutableSnapshot() throws Exception {
         stubLoader(List.of(loaded("a", false, new FakeModule("a", new ArrayList<>()))));

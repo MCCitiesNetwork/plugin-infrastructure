@@ -9,8 +9,8 @@ import java.util.concurrent.CompletableFuture;
 public interface PluginModule<T extends Plugin> {
 
     /**
-     * Starts this module: reads its configuration and registers its listeners, tasks and commands
-     * with the host.
+     * Starts this module: reads its configuration and registers its listeners and tasks with the
+     * host. Commands are not registered here; see {@link #declareCommands}.
      *
      * <p><strong>Failure is the module's to clean up.</strong> If this method throws, the
      * {@link ModuleLifecycleManager} logs the failure and closes the module's class loader, but it
@@ -18,6 +18,8 @@ public interface PluginModule<T extends Plugin> {
      * a listener keeps firing with classes from a closed class loader, a task keeps running. An
      * implementation must therefore either do all fallible work (reading config, resolving
      * services) before registering anything, or undo what it registered before rethrowing.
+     * Commands declared through {@link #declareCommands} are the exception: they stay
+     * registered and reply as unavailable, so they need no cleanup.
      *
      * @param plugin     the host plugin
      * @param dataFolder this module's own data folder
@@ -25,6 +27,27 @@ public interface PluginModule<T extends Plugin> {
      *                                       everything it registered before throwing
      */
     void initialize(@NotNull T plugin, @NotNull Path dataFolder) throws ModuleInitializationException;
+
+    /**
+     * Declares this module's Brigadier commands. Override it to add commands; the default declares
+     * none.
+     *
+     * <p>Paper only accepts commands during its lifecycle commands event, which fires before modules
+     * initialize, so the {@link ModuleLifecycleManager} calls this from
+     * {@link ModuleLifecycleManager#declareCommands}, between {@code load()} and
+     * {@code initializeLoaded()}, at most once per load. It must only build command trees: no IO,
+     * listeners or tasks, and no state that {@link #initialize} sets up. Executors and suggestion
+     * providers may use that state, because they only run while the module is active; otherwise
+     * the host's unavailable handler replies. Requirements ({@code requires}) run regardless and must
+     * not depend on it. Commands are never unregistered, so they need no cleanup.
+     *
+     * <p>If this method throws, nothing it declared is registered and the module is unloaded.
+     *
+     * @param root      subcommands under the host's root command
+     * @param registrar top-level commands
+     */
+    default void declareCommands(@NotNull ModuleCommandRoot root, @NotNull ModuleCommandRegistrar registrar) {
+    }
 
     /**
      * Stops this module and releases everything {@link #initialize} registered.

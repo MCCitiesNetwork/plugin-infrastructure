@@ -59,6 +59,13 @@ outcome that cannot occur.
   class loader, so a module must clean up its own partial registrations before throwing (documented
   on `PluginModule#initialize`). `SimplePluginModule` tracks listeners but unregisters nothing by
   itself. Changing this is a contract change for every module, not a bug fix.
+- **Module commands are declared, never unregistered.** Paper only accepts commands during its
+  lifecycle commands event, before modules initialize, and its API cannot remove them. A module
+  overrides `PluginModule#declareCommands` (a default no-op), which
+  `ModuleLifecycleManager#declareCommands` calls between `load()` and `initializeLoaded()`.
+  `CommandGuard` rebuilds each tree so executors and suggestions run only while the module is
+  active, and the host's `ModuleUnavailableHandler` replies otherwise. Redirects are rejected
+  because they would bypass the guard. A module never cleans up its commands.
 - **`ModuleLifecycleManager` is not thread-safe.** Its state must be touched from one thread (the
   server main thread on Paper).
 - **`SchemaMigrator` is abstract and dialect-agnostic.** It provides no SQL of its own — subclasses

@@ -49,7 +49,19 @@ by a `ModuleManifest` and loaded at runtime by its own `URLClassLoader`.
   (configurate-serializable).
 - `ModuleLoader` — reads module jars from a directory and instantiates their entry classes.
 - `ModuleLifecycleManager<T>` — owns the runtime lifecycle: `start()`, `stop()`,
-  `reloadAsync(moduleName)`, `getActiveModules()`.
+  `reloadAsync(moduleName)`, `getActiveModules()`. `start()` is `load()` then `initializeLoaded()`;
+  call the two separately when the host must do something with the loaded modules first, such as
+  letting them declare commands while the server still accepts registrations.
+- `PluginModule#declareCommands(ModuleCommandRoot, ModuleCommandRegistrar)` — a default no-op that a
+  module overrides to add Brigadier commands: subcommands under the host's root, or top-level
+  commands. Both parameters guard every tree.
+
+> **Commands:** Paper only accepts commands during `LifecycleEvents.COMMANDS`, before modules
+> initialize, and cannot unregister them. Call `declareCommands(commands, root, unavailable)` from that
+> event handler, every time it fires, between `load()` and `initializeLoaded()`. A module command runs
+> module code only while its module is active; when the module failed to initialize or has stopped,
+> the host's `ModuleUnavailableHandler` replies instead. Commands therefore need no cleanup on a
+> failed start. Module commands must not use redirects.
 
 > **Failed start:** if `initialize` throws, the manager closes the module's class loader but does
 > **not** call `shutdown`. A module must do its fallible work before registering anything, or undo
@@ -69,7 +81,14 @@ Path moduleDir = getDataFolder().toPath().resolve("modules");
 ModuleLoader loader = new ModuleLoader(moduleDir);
 var lifecycle = new ModuleLifecycleManager<>(this, loader, MyPlugin.class.getName(), getLogger());
 
-lifecycle.start();                 // load + initialize all modules (call from the main thread)
+lifecycle.load();                  // load module jars, no initialize yet
+getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+    LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("myplugin");
+    lifecycle.declareCommands(event.registrar(), root,
+            (source, module) -> source.getSender().sendMessage("That feature is unavailable."));
+    event.registrar().register(root.build());
+});
+lifecycle.initializeLoaded();      // initialize (call from the main thread)
 // ...
 lifecycle.reloadAsync("economy"); // refresh one reloadable module's config
 // ...
