@@ -9,8 +9,8 @@ import java.util.concurrent.CompletableFuture;
 public interface PluginModule<T extends Plugin> {
 
     /**
-     * Starts this module: reads its configuration and registers its listeners, tasks and commands
-     * with the host.
+     * Starts this module: reads its configuration and registers its listeners and tasks with the
+     * host. Commands are not registered here; see {@link CommandDeclaringModule}.
      *
      * <p><strong>Failure is the module's to clean up.</strong> If this method throws, the
      * {@link ModuleLifecycleManager} logs the failure and closes the module's class loader, but it
@@ -18,6 +18,8 @@ public interface PluginModule<T extends Plugin> {
      * a listener keeps firing with classes from a closed class loader, a task keeps running. An
      * implementation must therefore either do all fallible work (reading config, resolving
      * services) before registering anything, or undo what it registered before rethrowing.
+     * Commands declared through {@link CommandDeclaringModule} are the exception: they stay
+     * registered and reply as unavailable, so they need no cleanup.
      *
      * @param plugin     the host plugin
      * @param dataFolder this module's own data folder
